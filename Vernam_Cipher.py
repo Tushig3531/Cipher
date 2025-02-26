@@ -15,3 +15,4 @@ text="tushigerdenebulgan"
 cipher=vernam(text,key,True)
 print("Cipher: ",vernam(text,key,True))
 print("Plaintext:", vernam(cipher,key,False))
+print("Key:", key)
