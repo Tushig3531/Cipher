@@ -4,7 +4,10 @@ index_to_letter=dict(zip(range(len(alphabet)),alphabet))
 
 def encrypt_vigenere(text,key):
     result=""
-    split_message=[text[i:i+len(key)]for i in range(0, len(text),len(key))]
+    split_message=[]
+    for i in range(0,len(text),len(key)):
+        piece= text[i:i+len(key)]
+        split_message.append(piece)
     for each in split_message:
         i=0
         for letter in each:
@@ -16,7 +19,10 @@ def encrypt_vigenere(text,key):
     
 def decrypt_vigenere(cipher,key):
     result=""
-    split_message=[cipher[i:i+len(key)]for i in range(0, len(cipher),len(key))]
+    split_message=[]
+    for i in range(0,len(cipher),len(key)):
+        piece= cipher[i:i+len(key)]
+        split_message.append(piece)
     for each in split_message:
         i=0
         for letter in each:
