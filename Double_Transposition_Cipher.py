@@ -68,10 +68,10 @@ def decrypt_cipher(ciphertext, key):
     return plaintext.lower()
         
 
-text="TushigErdenebulgan"
-row_key=[5,3,1,0,2,4]
-column_key=[1,0,2]
+text="Hi my name is Tushig, and I am 21 years old!"
+row_key=[2,1,3,0]
+column_key=[5,7,3,1,9,0,2,4,6,8]
 key=(row_key,column_key)
-ciphertext="AGNNEEIHGUTSREDUBL"
+ciphertext="  N M,ADIAUH IG STSIER 2  1YAS AMIEH YNM"
 print(encrypt_cipher(text,key))
 print(decrypt_cipher(ciphertext,key))
