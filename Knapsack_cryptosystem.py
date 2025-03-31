@@ -1,71 +1,159 @@
 import random
 from math import gcd
 
-def generate_superincreasing_sequence(n,start=2,factor=10):
-    sequence=[]
-    total=0
-    for _ in range(n):
-        next_val=random.randint(total+1,total+factor)
-        sequence.append(next_val)
-        total+=next_val
-    return sequence
+LARGE_N = 100
 
-def modular_inverse(a,m):
+
+
+def generate_sik(size: int) -> tuple[int, ...]:
+    sik=[]
+    total=0
+    
+    for _ in range(size):
+        val=random.randint(total+1,total+10)
+        sik.append(val)
+        total+=val
+    return tuple(sik)
+
+
+
+
+def calculate_n(sik: tuple) -> int:
+    return sum(sik)+1
+
+
+
+
+def calculate_m(n: int) -> int:
+    for x in range(n-1,0,-1):
+        if gcd(x,n)==1:
+            return x
+    raise ValueError("No coprime found")
+
+
+
+
+
+def calculate_inverse(sik: tuple[int, ...], n: int = 0, m: int = 0) -> int:
+    if n==0:
+        n=calculate_n(sik)
+    if m==0:
+        m=calculate_m(n)
     def egcd(a,b):
         if a==0:
-            return (b,0,1)
-        else:
-            g,y,x=egcd(b%a,a)
-            return (g,x-(b//a)*y,y)
-    g,x,_=egcd(a,m)
+            return b,0,1
+        g,x,y=egcd(b%a,a)
+        return g,y-(b//a)*x,x
+    g,x,_=egcd(m,n)
     if g!=1:
-        raise Exception('Modular inverse does not exist')
-    return x%m
+        raise ValueError("m and n are not coprime")
+    return x%n  
 
-def generate_key(n):
-    private_key=generate_superincreasing_sequence(n)
-    total=sum(private_key)
-    q=random.randint(total+1,total+100) 
-    r=random.randint(2,q-1)
-    while gcd(r,q)!=1:
-        r=random.randint(2,q-1)
-    public_key=[(r*w)%q for w in private_key]
-    return public_key,private_key,q,r    
 
-def encrypt(message,public_key):
-    if len(message)!=len(public_key):
-        raise ValueError("Message length must equal the public key length")
-    ciphertext=sum(int(bit)*publickey for bit,publickey in zip(message,public_key))
-    return ciphertext
 
-def decrypt(ciphertext,private_key,q,r):
-    r_inv=modular_inverse(r,q)
-    cipher=(ciphertext*r_inv)%q
-    n=len(private_key)
-    message=[0]*n
-    for i in reversed(range(n)):
-        if private_key[i]<=cipher:
-            message[i]=1
-            cipher-=private_key[i]
-    return ''.join(map(str,message))
+
+
+def generate_gk(sik: tuple[int, ...], n: int = 0, m: int = 0) -> tuple[int, ...]:
+    if n==0:
+        n=calculate_n(sik)
+    if m==0:
+        m=calculate_m(n)
+    return tuple((a*m)%n for a in sik)
+
+
+
+
+
+def encrypt(plaintext: str, gk: tuple[int, ...]) -> int:
+    int_val=0
+    for c in plaintext:
+        int_val=(int_val<<8)+ord(c)
+
+    if int_val.bit_length()>len(gk):
+        raise ValueError("Plaintext is longer than the knapsack capacity")
+
+    bits = bin(int_val)[2:].zfill(len(gk))
+    c = 0
+    for i, bitchar in enumerate(bits):
+        if bitchar=='1':
+            c+=gk[i]
+    return c
+    
+    
+
+
+def decrypt(ciphertext: int, sik: tuple[int, ...], n: int = 0, m: int = 0) -> str:
+
+    if n==0:
+        n=calculate_n(sik)
+    if m==0:
+        m=calculate_m(n)
+
+    inv_m=calculate_inverse(sik,n,m)
+    c_prime=(ciphertext*inv_m)%n
+
+    bits_reversed=[]
+    remainder=c_prime
+    for weight in reversed(sik):
+        if weight<=remainder:
+            bits_reversed.append('1')
+            remainder-=weight
+        else:
+            bits_reversed.append('0')
+    bits_reversed.reverse()
+
+    # converting bits to integer
+    bitstring = "".join(bits_reversed)
+    dec_val = int(bitstring, 2)
+
+    #converting integer to bytes
+    recovered_bytes=[]
+    while dec_val > 0:
+        recovered_bytes.append(dec_val & 0xFF)
+        dec_val >>= 8
+    recovered_bytes.reverse()
+
+    if not recovered_bytes:
+        return ""
+
+    plaintext = "".join(chr(b) for b in recovered_bytes)
+    return plaintext.lstrip("\x00")
+    
+        
+
 
 def main():
-    n = 8 
-    public_key,private_key,q,r = generate_key(n)
-    print("Public Key:",public_key)
-    print("Private Key (superincreasing sequence):",private_key)
-    print("Modulus q:",q)
-    print("Multiplier r:",r)
 
-    message = "10110010"
-    print("Original message:", message)
+    size=8
 
-    ciphertext = encrypt(message, public_key)
-    print("Ciphertext:", ciphertext)
-    
-    decrypted_message = decrypt(ciphertext, private_key, q, r)
-    print("Decrypted message:", decrypted_message)
+    sik=generate_sik(size)
+    print("Superincreasing knapsack (sik):")
+    print(sik)
+
+    n=calculate_n(sik)
+    print("\nCalculated N:")
+    print(n)
+
+    m=calculate_m(n)
+    print("\nCalculated M:")
+    print(m)
+
+    gk=generate_gk(sik,n,m)
+    print("\nGeneral knapsack (gk):")
+    print(gk)
+
+    plaintext="10110010"
+    print("\nPlaintext (binary):")
+    print(plaintext)
+
+    ciphertext=encrypt(plaintext,gk)
+    print("\nCiphertext:")
+    print(ciphertext)
+
+    decrypted=decrypt(ciphertext,sik,n,m)
+    print("\nDecrypted plaintext (binary):")
+    print(decrypted)
+
 
 if __name__ == "__main__":
     main()
-        
