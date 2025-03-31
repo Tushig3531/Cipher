@@ -84,7 +84,7 @@ def salsa20_encrypt(key,nonce,plaintext):
 
 key = b'0123456789abcdef0123456789abcdef'
 nonce = b'12345678'
-message = b"Hi my name is Tushig"
+message = b"I love Egshiglen"
 print("Original message:", message)
 ciphertext = salsa20_encrypt(key,nonce,message)
 print("Encrypted message:", ciphertext.hex())
